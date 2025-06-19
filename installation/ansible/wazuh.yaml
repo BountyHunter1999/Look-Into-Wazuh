@@ -1,0 +1,107 @@
+---
+- name: Setup Wazuh
+  hosts: wazuh_manager_server
+  become: true
+  # gather_facts: true
+  # roles:
+  #   - role: wazuh/wazuh-indexer
+  #     become: no
+  #     vars:
+  #       perform_installation: false
+  #       instances: # A certificate will be generated for every node using the name as CN
+  #         node1:
+  #           name: "{{ indexer_node_name }}" # Must be equal to indexer_node_name
+  #     tags:
+  #       - generate-certs
+  vars:
+    instances: # A certificate will be generated for every node using the name as CN
+      node1:
+        name: "{{ indexer_node_name }}" # Must be equal to indexer_node_name
+        ip: "{{ indexer_network_host }}"
+        role: "indexer"
+    indexer_cluster_nodes:
+      - "{{ indexer_network_host }}"
+      # - 127.0.0.1
+      # - 127.0.0.1
+  tasks:
+    - name: See group_names
+      debug:
+        var: group_names
+
+    - name: Generate certificates
+      include_role:
+        name: wazuh/wazuh-indexer
+      # become: no
+      vars:
+        perform_installation: false
+
+      tags:
+        - generate-certs
+      # when: "'wazuh_indexer_server' in group_names"
+
+    # Runs in port 9200
+    - name: Install Indexer # systemctl status wazuh-indexer
+      include_role:
+        name: wazuh/wazuh-indexer
+      tags:
+        - wazuh_indexer_server
+      when: "'wazuh_indexer_server' in group_names"
+
+    - name: Install Dashboard # systemctl status wazuh-dashboard
+      include_role:
+        name: wazuh/wazuh-dashboard
+      tags:
+        - wazuh_dashboard_server
+      when: "'wazuh_dashboard_server' in group_names"
+      vars:
+        ansible_shell_allow_world_readable_temp: true
+
+    # Runs in port 1514
+    - name: Setup Wazuh Manager
+      block:
+        - name: Install Wazuh Manager # systemctl status wazuh-manager
+          include_role:
+            name: wazuh/ansible-wazuh-manager
+          tags:
+            - wazuh_manager_server
+          when: "'wazuh_manager_server' in group_names"
+
+        - name: Install Wazuh Manager # systemctl status filebeat
+          include_role:
+            name: wazuh/ansible-filebeat-oss
+      tags: wazuh-manager
+      vars:
+        # indicates the host group of the Wazuh indexer cluster
+        filebeat_output_indexer_hosts:
+          - "{{ indexer_network_host }}:9200"
+          - 127.0.0.1:9200
+        filebeat_node_name: "{{ indexer_node_name }}"
+
+- name: Install Wazuh Agent
+  hosts: wazuh_agent_servers
+  become: true
+  tasks:
+    - name: See Agent can be created
+      debug:
+        var: "'wazuh_agent_servers' in group_names"
+      tags:
+        - debug
+        - wazuh-agent
+
+    # Runs in port 55000
+    - name: Install Wazuh Agent
+      include_role:
+        name: wazuh/ansible-wazuh-agent
+      tags: wazuh-agent
+      vars:
+        # connection details for the connection with the Wazuh Manager
+        wazuh_managers:
+          - address: "{{ wazuh_manager_server_ip | default('127.0.0.1') }}"
+            port: "{{ wazuh_manager_server_port | default(1514) }}"
+            protocol: "{{ wazuh_manager_server_protocol | default('tcp') }}"
+            api_port: "{{ wazuh_manager_api_port | default(55000) }}"
+            api_proto: "{{ wazuh_manager_api_protocol | default('https') }}"
+            api_user: "{{ wazuh_manager_api_username | default('wazuh') }}"
+            max_retries: "{{ wazuh_agent_max_retries | default(5) }}"
+            retry_interval: "{{ wazuh_agent_retry_interval | default(10) }}"
+      # when: "'wazuh_agent_servers' in group_names"
