@@ -1,0 +1,28 @@
+- name: Install Wazuh Agent
+  hosts: wazuh_agent_servers
+  become: true
+  tasks:
+    - name: See Agent can be created
+      debug:
+        var: "'wazuh_agent_servers' in group_names"
+      tags:
+        - debug
+        - wazuh-agent
+
+    # Runs in port 55000
+    - name: Install Wazuh Agent
+      include_role:
+        name: wazuh/ansible-wazuh-agent
+      tags: wazuh-agent
+      vars:
+        # connection details for the connection with the Wazuh Manager
+        wazuh_managers:
+          - address: "{{ wazuh_manager_server_ip | default('127.0.0.1') }}"
+            port: "{{ wazuh_manager_server_port | default(1514) }}"
+            protocol: "{{ wazuh_manager_server_protocol | default('tcp') }}"
+            api_port: "{{ wazuh_manager_api_port | default(55000) }}"
+            api_proto: "{{ wazuh_manager_api_protocol | default('https') }}"
+            api_user: "{{ wazuh_manager_api_username | default('wazuh') }}"
+            max_retries: "{{ wazuh_agent_max_retries | default(5) }}"
+            retry_interval: "{{ wazuh_agent_retry_interval | default(10) }}"
+      # when: "'wazuh_agent_servers' in group_names"

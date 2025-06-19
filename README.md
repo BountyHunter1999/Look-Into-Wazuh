@@ -63,4 +63,10 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 - Installed on endpoints such as laptops, desktops, servers, and containers.
 - They provide threat prevention, detection, and response capabilities.
 
+#### Problems When Deploying:
+
+- If getting `mv: cannot overwrite '/var/ossec/etc/shared/default': Directory not empty`
+  - backup the older file and let the post install script finish `sudo dpkg --configure -a`
+  - or just remove the file `sudo rm -rf /var/ossec/etc/shared/default` (not recommended for production)
+
 ![Wazuh Components](./images/Wazuh-Components.png)
