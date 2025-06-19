@@ -44,11 +44,6 @@
           when: "'wazuh_dashboard_server' in group_names"
           vars:
             ansible_shell_allow_world_readable_temp: true
-      vars:
-        wazuh_api_cerdentials:
-          - id: default
-            url: https://{{ wazuh_manager_server_ip }}
-            port: 55000
 
     # Runs in port 1514
     - name: Setup Wazuh Manager
