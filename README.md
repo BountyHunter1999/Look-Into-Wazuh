@@ -29,6 +29,10 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 - It processes it through decoders and rules, using threat intelligence to look for well-known indicators of compromise (IoCs).
 - This central component is responsible for managing agents, configuring and upgrading them remotely when necessary
 
+#### Debugging
+
+- See agents registred to the manager: `sudo /var/ossec/bin/agent_control -l`
+
 ### Wazuh Dashboard:
 
 - Web user interface for data visualization and analysis.
