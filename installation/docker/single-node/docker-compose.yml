@@ -50,7 +50,7 @@ services:
     hostname: wazuh.indexer
     restart: unless-stopped
     ports:
-      - "9200:9200"
+      - "${HOST_IP}:9200:9200"
     environment:
       - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
     ulimits:
@@ -76,7 +76,8 @@ services:
     restart: unless-stopped
     ports:
       # - "5601:5601"
-      - "0.0.0.0:443:5601"
+      # - "${HOST_IP}:443:5601"
+      - "${HOST_IP}:5601:5601"
     environment:
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=SecretPassword

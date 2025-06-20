@@ -77,5 +77,90 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 
 ![Wazuh Components](./images/Wazuh-Components.png)
 
-
 ## Proof of Concepts
+
+### Block a known malicious actor
+
+- We'll block a malicious IP addresses from accessing web resources on a web server.
+
+- We'll install apache web server and monitor its logs with Wazuh agent
+- `sudo apt-get update && sudo apt-get install apache2`
+  - if firewall is enabled, allow external access to apache web server
+    - `sudo ufw status` show the status of the firewall
+    - `sudo ufw app list` list the available applications
+    - `sudo ufw allow in "Apache"` allow external access to apache web server
+- `sudo systemctl status apache2` check the status of the apache web server
+- Add configuration to `/var/ossec/etc/ossec.conf` file to configure the Wazuh agent and monitor the apache access logs
+  ```xml
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/apache2/access.log</location>
+  </localfile>
+  ```
+- Restart the Wazuh agent `sudo systemctl restart wazuh-agent`
+
+- Add a custom rule to trigger a Wazuh active response script (`/var/ossec/etc/rules/local_rules.xml`)
+
+  ```xml
+  <group name="attack">
+    <rule id="100100" level="10">
+      <if_group>web|attack|attacks</if_group>
+      <list field="src_ip" lookup="address_match_key">/etc/lists/blacklist-alienvault</list>
+      <description>IP address found in AlienVault reputation database.</description>
+    </rule>
+  </group>
+  ```
+
+- Edit the Wazuh server `/var/ossec/etc/ossec.conf` configuration file and add the `/etc/lists/blacklist-alienvault` list to the `<ruleset>` section.
+
+  ```xml
+  <ossec_config>
+    <ruleset>
+      <!-- Default ruleset -->
+      <decoder_dir>ruleset/decoders</decoder_dir>
+      <rule_dir>ruleset/rules</rule_dir>
+      <rule_exclude>0215-policy_rules.xml</rule_exclude>
+      <list>etc/lists/audit-keys</list>
+      <list>etc/lists/amazon/aws-eventnames</list>
+      <list>etc/lists/security-eventchannel</list>
+      <list>etc/lists/blacklist-alienvault</list>
+
+      <!-- User-defined ruleset -->
+      <decoder_dir>etc/decoders</decoder_dir>
+      <rule_dir>etc/rules</rule_dir>
+    </ruleset>
+  </ossec_config>
+  ```
+
+- Add the Active Response block to the Wazuh server `/var/ossec/etc/ossec.conf` configuration file.
+
+  - `firewall-drop` command integrates with the Ubuntu local ip tables firewall and drops incoming network connection from the attacker endpoint for 60 seconds.
+
+  ```xml
+  <ossec_config>
+    <active-response>
+      <disabled>no</disabled>
+      <command>firewall-drop</command>
+      <location>local</location>
+      <rules_id>100100</rules_id>
+      <timeout>60</timeout>
+    </active-response>
+  </ossec_config>
+  ```
+
+- restart the Wazuh server to apply the changes: `sudo systemctl restart wazuh-manager`
+
+#### Emulation of an attack
+
+- `curl http://<WEBSERVER_IP>/`
+- first the attacker endpoint conencts to the victims's web servers the first time
+- After the first connection, the Wazuh Active Response module temporarily blocks any successive connection to the web servers for 60 seconds.
+- In dashboard u can view the rul.id (100100)
+
+### File Integrity Monitoring
+
+- FIM helps in auditing sensitive files and meeting regulatory compliance requirements.
+- Wazuh has an inbuilt FIM module that monitors file system changes to detect the creation, modification, and deletion of files.
+
+- Wazuh FIM module enriches alert data by fetching information about the user and process that made the change using `who-data audit`
+  - `who-data audit` is a command that fetches information about the user and process that made the change.
