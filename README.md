@@ -76,3 +76,6 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
   - or just remove the file `sudo rm -rf /var/ossec/etc/shared/default` (not recommended for production)
 
 ![Wazuh Components](./images/Wazuh-Components.png)
+
+
+## Proof of Concepts
