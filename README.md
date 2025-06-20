@@ -67,6 +67,8 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 - Installed on endpoints such as laptops, desktops, servers, and containers.
 - They provide threat prevention, detection, and response capabilities.
 
+> We can't install both Wazuh Agent and Wazuh Manager on the same machine.
+
 #### Problems When Deploying:
 
 - If getting `mv: cannot overwrite '/var/ossec/etc/shared/default': Directory not empty`

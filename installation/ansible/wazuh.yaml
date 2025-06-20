@@ -63,5 +63,13 @@
       vars:
         # indicates the host group of the Wazuh indexer cluster
         filebeat_output_indexer_hosts:
-          - "{{ indexer_network_host }}:9200"
+          - "{{ indexer_network_host }}"
         filebeat_node_name: "{{ indexer_node_name }}"
+        wazuh_manager_labels:
+          enable: true
+          list:
+            - key: Env
+              value: Production
+        # wazuh_manager_indexer:
+        #   enabled: "yes"
+        #   hosts: "{{ indexer_network_host }}"
