@@ -203,6 +203,13 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 - Docker automates the deployment of different applications inside software containers.
 - Wazuh module for Docker identifies security and incidents across contrainers and alerts in real-time.
 
+- Install Python and pip `sudo apt install python3 python3-pip`
+- Upgrade pip `pip3 install --upgrade pip`
+- Install docker and Python Docker library:
+
+  - Python 3.8-3.10: `sudo pip3 install docker==7.1.0 urllib3==1.26.20 requests==2.32.2`
+  - Python 3.11-3.12: `sudo pip3 install docker==7.1.0 urllib3==1.26.20 requests==2.32.2 --break-system-packages`
+
 - Make sure that there is a Docker daemon running on the host machine.
 - In `/var/ossec/etc/ossec.conf` file, add the block to enable `docker-listener` module.
 
@@ -219,9 +226,51 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 
 - Then restart the wazuh agent `sudo systemctl restart wazuh-agent`
 
+#### Emulation
+
+```bash
+docker pull nginx
+docker run -d -P --name nginx_container nginx
+docker exec -it nginx_container cat /etc/passwd
+docker exec -it nginx_container /bin/bash
+exit
+
+
+docker stop nginx_container
+docker rm nginx_container
+```
+
+### Monitoring AWS infrastructure
+
+- Wazuh module for AWS (aws-s3) enables the log data collection from different AWS sources.
+- Wazuh default ruleset parses AWS logs and generates alerts automatically
+  - These alerts appear as soon as Wazuh recives the logs from the AWS S3 bucket.
+
+#### Emulation
+
+- Access Cloud Trail, create new trail.
+- Enable s3 bucket logging (create a new bucket or use an existing one).
+- In wazuh server:
+
+```xml
+<wodle name="aws-s3">
+  <disabled>no</disabled>
+  <interval>30m</interval>
+  <run_on_start>yes</run_on_start>
+  <skip_on_error>no</skip_on_error>
+
+  <bucket type="cloudtrail">
+    <name><AWS_BUCKET_NAME></name>
+    <aws_profile><AWS_PROFILE_NAME></aws_profile>
+  </bucket>
+</wodle>
+```
+
+- Restart the wazuh manager to apply changes: `sudo systemctl restart wazuh-manager`
+
 ## Troubleshooting
 
 ### `python` No such file or directory
 
 - Location: `/var/ossec/logs/ossec.log`
-- Fix: `sudp ln -s /usr/bin/python3 /usr/bin/python`
+- Fix: `sudo ln -s /usr/bin/python3 /usr/bin/python`

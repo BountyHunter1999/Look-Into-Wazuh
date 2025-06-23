@@ -21,4 +21,7 @@ $ docker-compose up
 $ docker-compose up -d
 ```
 
+- Visit: `https://localhost:5601/` to access the Wazuh dashboard.
+    - `admin:SecretPassword` is the default credentials for the Wazuh dashboard.
+
 The environment takes about 1 minute to get up (depending on your Docker host) for the first time since Wazuh Indexer must be started for the first time and the indexes and index patterns must be generated.
