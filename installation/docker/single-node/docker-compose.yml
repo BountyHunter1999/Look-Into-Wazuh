@@ -50,7 +50,7 @@ services:
     hostname: wazuh.indexer
     restart: unless-stopped
     ports:
-      - "${HOST_IP}:9200:9200"
+      - "9200:9200"
     environment:
       - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
     ulimits:
@@ -75,9 +75,7 @@ services:
     hostname: wazuh.dashboard
     restart: unless-stopped
     ports:
-      # - "5601:5601"
-      # - "${HOST_IP}:443:5601"
-      - "${HOST_IP}:5601:5601"
+      - "5601:5601"
     environment:
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=SecretPassword
@@ -96,6 +94,16 @@ services:
       - wazuh-dashboard-custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
     depends_on:
       - wazuh.indexer
+
+  wazuh.agent:
+    image: wazuh/wazuh-agent:4.13.0-alpha1
+    hostname: wazuh.agent
+    restart: unless-stopped
+    environment:
+      - WAZUH_AGENT_NAME=wazuh.agent
+      - WAZUH_MANAGER_SERVER=wazuh.manager
+    volumes:
+      - ./config/wazuh_agent/wazuh-agent.conf:/wazuh-config-mount/etc/ossec.conf
 
 volumes:
   wazuh_api_configuration:
