@@ -163,4 +163,65 @@ https://documentation.wazuh.com/current/deployment-options/docker/wazuh-containe
 - Wazuh has an inbuilt FIM module that monitors file system changes to detect the creation, modification, and deletion of files.
 
 - Wazuh FIM module enriches alert data by fetching information about the user and process that made the change using `who-data audit`
+
   - `who-data audit` is a command that fetches information about the user and process that made the change.
+
+- Edit the Wazuh agent `/var/ossec/etc/ossec.conf`
+- Add the directories for monitoring within the `<syscheck>` block.
+
+  - To get additional information about the user and process that made the changes, enable `who-data audit`
+
+  - `<directories check_all="yes" report_changes="yes" realtime="yes">/root</directories>`
+
+- Restart the Wazuh agent `sudo systemctl restart wazuh-agent`
+
+### Detecting Brute force attacks
+
+- Brute-forcing is a common attack vector that threat actors use to gain unauthorized access to endpoints and services.
+- SSH and RDP on Windows endpoints are prone to brute-force attacks.
+- Wazuh identifies brute-force attacks by correlating multiple authentication failure events.
+
+#### Emulation
+
+- Install hydra tool to perform brute-force attacks
+  - `sudo apt-get update && sudo apt-get install hydra`
+- Create a text file with random passwords.
+
+  - `sudo hydra -l badguy -P <password-list> <IP> ssh`:
+    - `-l` specifies the username to use for the attack.
+    - `-P` specifies the path to the password list file.
+  - `sudo hydra -l badguy -P <password-list> rdp://<WINDOWS_IP>`:
+    - `rdp` specifies the Remote Desktop Protocol service.
+
+- Visualize the laerts in the Wazuh dashboard.
+  - Go to Threat Hunting > Filter alters in search bar: `rule.id:(5551 OR 5712)`
+  - Other related rules: `5710, 5711, 5716, 5720, 5503, 5504`
+  - For windows: `60122 OR 60204`
+
+### Monitoring Docker Events
+
+- Docker automates the deployment of different applications inside software containers.
+- Wazuh module for Docker identifies security and incidents across contrainers and alerts in real-time.
+
+- Make sure that there is a Docker daemon running on the host machine.
+- In `/var/ossec/etc/ossec.conf` file, add the block to enable `docker-listener` module.
+
+```xml
+<ossec_config>
+  <wodle name="docker-listener">
+    <interval>10m</interval>
+    <attempts>5</attempts>
+    <run_on_start>yes</run_on_start>
+    <disabled>no</disabled>
+  </wodle>
+</ossec_config>
+```
+
+- Then restart the wazuh agent `sudo systemctl restart wazuh-agent`
+
+## Troubleshooting
+
+### `python` No such file or directory
+
+- Location: `/var/ossec/logs/ossec.log`
+- Fix: `sudp ln -s /usr/bin/python3 /usr/bin/python`
