@@ -268,6 +268,18 @@ docker rm nginx_container
 
 - Restart the wazuh manager to apply changes: `sudo systemctl restart wazuh-manager`
 
+### Detecting an SQL injection attack
+
+- Monitor a local file, similar to what we did for apache
+- Restart wazuh-agent
+- `curl -XGET  "http://<UBUNTU_IP>/users/?id=SELECT+*+FROM+users";`
+- Visualize with rule id: `31103` or `31106`
+
+### Monitoring execution of malicious commands
+
+- Auditd is an auditing utility native to Linux systems.
+- It's used for accounting actions and changes in a Linux endpoint.
+
 ## Troubleshooting
 
 ### `python` No such file or directory
