@@ -1,6 +1,9 @@
 ping:
 	ansible firefly_main -m ping
 
+ping_vm:
+	ansible -i inventory-VM.yaml all -m ping
+
 indexer_dev:
 	ansible-playbook wazuh.yaml -e@vars-dev.yaml -t wazuh_indexer_server
 

@@ -1,0 +1,56 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "adhikarishrish1/Swarm-ubuntu-2004"
+
+    # disable the automatic insertion of SSH keys into the virtual machine.
+    config.ssh.insert_key = false
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.boot_timeout = 1200
+    config.vm.provider :virtualbox do |v|
+        v.memory = 512
+        # create a master VM before creating the linked clones
+        v.linked_clone = true
+    end
+
+
+    # Application Server 1
+    config.vm.define "app1" do |app|
+      app.vm.hostname = "orc-app1.test"
+      app.vm.synced_folder ".", "/vagrant", disabled: true
+      app.vm.network :private_network, ip: "192.168.56.4"
+      app.vm.provision "shell", inline: <<-SHELL
+      apt update && apt-get upgrade -y
+      apt install nginx -y
+      SHELL
+    end
+
+    # Application Server 2
+    config.vm.define "app2" do |app|
+      app.vm.hostname = "orc-app2.test"
+      app.vm.synced_folder ".", "/vagrant", disabled: true
+      app.vm.network :private_network, ip: "192.168.56.5"
+      app.vm.provision "shell", inline: <<-SHELL
+      apt update && apt-get upgrade -y
+      apt install apache2 -y
+      SHELL
+    end
+
+    # Controller Server 1, for windows w/o wls2 use
+    config.vm.define "main" do |app|
+      app.vm.box = "adhikarishrish1/Swarm-ubuntu-2004"
+      app.vm.synced_folder ".", "/vagrant", disabled: true
+      app.ssh.insert_key = true
+      app.vm.provider :virtualbox do |v|
+        v.memory = 1024
+        # create a master VM before creating the linked clones
+        v.linked_clone = false
+        # disable serial port (error in wsl2 x vbox)
+        v.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+      end
+      app.vm.hostname = "orc-main"
+      app.vm.network :private_network, ip: "192.168.56.3"     
+      app.vm.provision "shell", inline: <<-SHELL
+      apt update && apt-get upgrade
+      SHELL
+    end
+
+end
