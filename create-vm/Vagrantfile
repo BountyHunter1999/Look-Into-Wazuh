@@ -49,7 +49,7 @@ Vagrant.configure("2") do |config|
       app.vm.hostname = "orc-main"
       app.vm.network :private_network, ip: "192.168.56.3"     
       app.vm.provision "shell", inline: <<-SHELL
-      apt update && apt-get upgrade
+      apt update && apt-get upgrade -y
       SHELL
     end
 
