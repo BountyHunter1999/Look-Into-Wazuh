@@ -5,7 +5,7 @@ indexer_version: 4.12.0
 single_node: false
 indexer_node_name: node-1
 indexer_cluster_name: wazuh
-indexer_network_host: '0.0.0.0'
+indexer_network_host: "0.0.0.0"
 
 indexer_node_master: true
 indexer_node_data: true
@@ -48,3 +48,7 @@ generate_certs: true
 perform_installation: true
 
 indexer_nolog_sensible: true
+
+indexer_knn_memory_circuit_breaker_limit: 512m
+
+native_access: false

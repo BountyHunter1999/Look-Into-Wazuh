@@ -92,3 +92,6 @@
 -Dclk.tck=100
 -Djdk.attach.allowAttachSelf=true
 -Djava.security.policy=file:///usr/share/wazuh-indexer/plugins/opensearch-performance-analyzer/pa_config/opensearch_security.policy
+{% if native_access %}
+--enable-native-access=ALL-UNNAMED
+{% endif %}

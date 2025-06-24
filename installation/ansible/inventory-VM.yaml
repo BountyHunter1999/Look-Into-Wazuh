@@ -1,0 +1,36 @@
+all:
+  hosts:
+    agent1:
+      ansible_host: 192.168.56.4
+      ansible_ssh_user: vagrant
+      ansible_become_pass: "vagrant"
+      ansible_ssh_private_key_file: "~/.ssh/id_rsa"
+    agent2:
+      ansible_host: 192.168.56.5
+      ansible_ssh_user: vagrant
+      ansible_become_pass: "vagrant"
+    manager1:
+      ansible_host: 192.168.56.3
+      ansible_ssh_user: vagrant
+      ansible_become_pass: "vagrant"
+      native_access: true
+  children:
+    wazuh_indexer_server:
+      hosts:
+        manager1:
+          indexer_network_host:
+    wazuh_dashboard_server:
+      hosts:
+        manager1:
+          dashboard_network_host: 127.0.0.1
+          indexer_network_host: 127.0.0.1
+    wazuh_agent_servers:
+      hosts:
+        agent1:
+        agent2:
+      vars:
+        wazuh_manager_server_ip: "{{ hostvars['manager1']['ansible_host'] }}"
+    wazuh_manager_server:
+      manager1:
+  vars:
+    local_certs_path: "{{ playbook_dir }}/indexer_vm/certificates"
